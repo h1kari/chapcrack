@@ -22,8 +22,18 @@ class RadiusCommand(ParseCommand):
         plaintext = self._getChallenge()
         response  = self._getResponse()
 
-        c1, c2, c3 = response[0:8], response[8:16], response[16:24]
-        k3         = self._getK3(plaintext, c3)
+        if len(response) == 8:
+            c1     = response[0:8]
+            c2     = binascii.unhexlify("0000000000000000")
+            c3     = binascii.unhexlify("0000000000000000")
+            k3     = binascii.unhexlify("0000")
+        elif len(response) == 16:
+            c1, c2 = response[0:8], response[8:16]
+            c3     = binascii.unhexlify("0000000000000000")
+            k3     = binascii.unhexlify("0000")
+        else:
+            c1, c2, c3 = response[0:8], response[8:16], response[16:24]
+            k3         = self._getK3(plaintext, c3)
 
         self._printParameters(None, plaintext, c1, c2, c3, k3)
 
@@ -48,7 +58,7 @@ class RadiusCommand(ParseCommand):
 
         response = binascii.unhexlify(response.replace(":", ""))
 
-        if len(response) != 24:
+        if len(response) != 24 and len(response) != 16 and len(response) != 8:
             self.printError("Invalid response length %d" % len(response))
 
         return response
